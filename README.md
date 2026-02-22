@@ -26,6 +26,8 @@ Main observations:
 - Better grammatical quality and visual-text alignment.
 - Slight vocabulary-diversity trade-off (lower TTR) but better relevance and accuracy.
 
+![Qualitative Example](docs/qualitative_example.jpg)
+
 Qualitative example:
 - Without fine-tuning: `a person sitting on the ground with a tv in front of them`
 - With fine-tuning: `A man is sitting in front of a television with a plate of food in front of him.`
