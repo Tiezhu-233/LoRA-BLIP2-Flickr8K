@@ -35,6 +35,7 @@ Qualitative example:
 
 ## Result PDF
 - Full result report: [`docs/result.pdf`](docs/result.pdf)
+- Caption comparison table: [`docs/generated_captions_comparison.csv`](docs/generated_captions_comparison.csv)
 
 ## Repository Structure
 ```text
@@ -59,32 +60,8 @@ scripts/
   eval.ps1/.sh
 ```
 
-## Setup
-### 1) Create and activate virtual environment
-Windows CMD:
-```cmd
-python -m venv .venv
-.venv\Scripts\activate
-```
 
-PowerShell:
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
 ```
-
-Linux/macOS:
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-### 2) Install dependencies
-```bash
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
 ## Dataset Preparation
 This repo does not ship Flickr8K. Prepare files locally and set paths with environment variables.
 
@@ -158,12 +135,6 @@ Configuration knobs:
 - `TRAIN_FP16`
 - `BLIP2_BASE_MODEL`
 - `LORA_CHECKPOINT`
-
-Not currently included:
-- 4-bit inference/QLoRA runtime path
-- `torch.compile`
-- FlashAttention/xFormers
-- ONNX/TensorRT export and deployment
 
 ## Runtime Configuration
 Common environment variables:
