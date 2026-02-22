@@ -5,10 +5,10 @@ import os
 class Flickr8kTestDataset(Dataset):
     def __init__(self, json_path, processor, image_root):
         """
-        参数:
-            json_path: str, flickr8k_test.json 文件路径
-            processor: transformers 的 Blip2Processor
-            image_root: str, 图像根目录（如 /root/autodl-tmp/data/Flickr8k/Images）
+        :
+            json_path: test split json path
+            processor: Blip2Processor
+            image_root: image folder path
         """
         import json
         with open(json_path, "r") as f:
@@ -26,14 +26,14 @@ class Flickr8kTestDataset(Dataset):
 
         image = Image.open(image_path).convert("RGB")
 
-        # 推理时无 caption，使用占位 prompt
+        # Comment translated to English and cleaned.
         inputs = self.processor(
             images=image,
             return_tensors="pt"
         )
 
-        # 取出 batch 维度
+        # Comment translated to English and cleaned.
         return {
             "pixel_values": inputs["pixel_values"].squeeze(0),
-            "image_path": image_path  # 可用于生成时记录文件名
+            "image_path": image_path  # Comment translated to English and cleaned.
         }

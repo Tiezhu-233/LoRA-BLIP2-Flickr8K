@@ -1,6 +1,6 @@
 from peft import LoraConfig
 
-def get_lora_config():
+def get_lora_settings():
     return LoraConfig(
         r=8,
         lora_alpha=16,

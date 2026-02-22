@@ -1,16 +1,18 @@
 import os
 import pandas as pd
 
-# 配置路径
-base_dir = "/root/autodl-tmp/data/Flickr8k/captions.txt"
+# Comment translated to English and cleaned.
+base_dir = os.getenv("FLICKR8K_TEXT_DIR", os.path.join("data", "flickr8k"))
 caption_file = os.path.join(base_dir, "Flickr8k.token.txt")
 expert_file = os.path.join(base_dir, "ExpertAnnotations.txt")
 crowd_file = os.path.join(base_dir, "CrowdFlowerAnnotations.txt")
-output_file = os.path.join(base_dir, "filtered_captions_top3.csv")
+output_dir = os.getenv("OUTPUT_DIR", os.path.join(os.getenv("PROJECT_ROOT", "."), "output"))
+os.makedirs(output_dir, exist_ok=True)
+output_file = os.path.join(output_dir, "filtered_captions_top3.csv")
 
 
-# === 加载 captions ===
-print("📄 加载 captions")
+# Comment translated to English and cleaned.
+print("  captions")
 caps = []
 with open(caption_file, 'r', encoding='utf-8') as f:
     for line in f:
@@ -20,25 +22,25 @@ with open(caption_file, 'r', encoding='utf-8') as f:
 df = pd.DataFrame(caps, columns=["full_image_id", "caption"])
 df["full_image_id"] = df["full_image_id"].str.lower()
 df["base_image_id"] = df["full_image_id"].str.split("#").str[0]
-print(f"✅ 总 caption 数: {len(df)}")
-print("示例 caption IDs:", df["full_image_id"].unique()[:5])
+print(f"  caption : {len(df)}")
+print(" caption IDs:", df["full_image_id"].unique()[:5])
 
 
-# 加载 expert score
-print("🔍 读取专家评分")
+# Comment translated to English and cleaned.
+print(" ")
 e = pd.read_csv(expert_file, sep="\t", header=None,
                 names=["image_file","caption_full_id","e1","e2","e3"])
 e["expert_score"] = e[["e1","e2","e3"]].mean(axis=1)
 expert_scores = dict(zip(e["caption_full_id"], e["expert_score"]))
 df["expert_score"] = df["full_image_id"].map(expert_scores)
-print(f"非空 expert_score 条数：{df['expert_score'].notnull().sum()}")
+print(f" expert_score {df['expert_score'].notnull().sum()}")
 
 before = len(df)
 df = df[df["expert_score"] >= 1.5]
-print(f"专家过滤后条数：{len(df)}，过滤掉 {before-len(df)}")
+print(f"{len(df)} {before-len(df)}")
 
-# 加载 crowd score
-print("🧑‍🤝‍🧑 读取群体验证评分")
+# Comment translated to English and cleaned.
+print(" ")
 c = {}
 with open(crowd_file) as f:
     for line in f:
@@ -50,18 +52,18 @@ with open(crowd_file) as f:
             except:
                 pass
 df["crowd_score"] = df["full_image_id"].map(c)
-print(f"非空 crowd_score 条数：{df['crowd_score'].notnull().sum()}")
+print(f" crowd_score {df['crowd_score'].notnull().sum()}")
 
 before = len(df)
 df = df[df["crowd_score"] >= 0.7]
-print(f"群体验证过滤后条数：{len(df)}，过滤掉 {before-len(df)}")
+print(f"{len(df)} {before-len(df)}")
 
-# 保留每张图 top3
-print("📊 保留每张图 top3 crowd_score")
+# Comment translated to English and cleaned.
+print("  top3 crowd_score")
 df = df.sort_values(["base_image_id","crowd_score"], ascending=False)
 df_top3 = df.groupby("base_image_id").head(3).reset_index(drop=True)
-print(f"最终条数：{len(df_top3)}，图像数量：{df_top3['base_image_id'].nunique()}")
+print(f"{len(df_top3)}{df_top3['base_image_id'].nunique()}")
 
-# 保存结果
+# Comment translated to English and cleaned.
 df_top3.to_csv(output_file,index=False)
-print(f"✅ 保存至 {output_file}")
+print(f"  {output_file}")

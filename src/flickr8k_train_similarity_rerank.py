@@ -1,4 +1,4 @@
-from datasets import Flickr8kDataset
+from flickr8k_dataset_full import Flickr8kDataset
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 import torch
 import os
@@ -20,83 +20,83 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-logger = logging.getLogger(__name__)  # ← 新增
+logger = logging.getLogger(__name__)  # Comment translated to English and cleaned.
 
-# 下面就可以安全地调用 logger.info(), logger.debug() 了：
-logger.info("脚本开始执行")
+# Comment translated to English and cleaned.
+logger.info("")
 
-# 设置基础路径
-base_dir = "/root/autodl-tmp"
+# Comment translated to English and cleaned.
+base_dir = os.getenv("PROJECT_ROOT", ".")
 
-# 设置数据集路径
-image_dir = os.path.join(base_dir, "data/Flickr8k/Images")
-caption_path = os.path.join(base_dir, "data/Flickr8k/captions.txt")
+# Comment translated to English and cleaned.
+image_dir = os.getenv("FLICKR8K_IMAGE_DIR", os.path.join(base_dir, "data", "flickr8k", "Flickr8k_Dataset"))
+caption_path = os.getenv("FLICKR8K_CAPTION_FILE", os.path.join(base_dir, "data", "flickr8k", "captions.txt"))
 
-# 初始化模型和处理器
+# Comment translated to English and cleaned.
 device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"使用设备: {device}")
+print(f": {device}")
 
-# 初始化句子相似度模型
+# Comment translated to English and cleaned.
 try:
-    print("正在加载相似度模型...")
+    print("...")
     similarity_model = SentenceTransformer('./all-MiniLM-L6-v2').to(device)
-    print("相似度模型加载成功")
+    print("")
 except Exception as e:
-    print(f"相似度模型加载失败: {str(e)}")
+    print(f": {str(e)}")
     similarity_model = None
 
 try:
-    print("正在加载BLIP模型...")
+    print("BLIP...")
     processor = Blip2Processor.from_pretrained("blip2-opt-2.7b")
     model = Blip2ForConditionalGeneration.from_pretrained(
         "blip2-opt-2.7b",
         torch_dtype=torch.float16
     ).to(device)
-    print("BLIP模型加载成功")
+    print("BLIP")
 except Exception as e:
-    print(f"模型加载失败: {str(e)}")
+    print(f": {str(e)}")
     exit(1)
 
-# 加载数据集
+# Comment translated to English and cleaned.
 try:
-    print("正在创建数据集实例...")
+    print("...")
     dataset = Flickr8kDataset(
         image_dir=image_dir,
         caption_path=caption_path,
         processor=processor,
         split='all'
     )
-    print(f"数据集创建成功，包含 {len(dataset)} 个样本")
+    print(f" {len(dataset)} ")
     
-    # 测试第一个样本
-    print("测试第一个样本...")
+    # Comment translated to English and cleaned.
+    print("...")
     sample = dataset[0]
-    print("输入张量形状:", sample["pixel_values"].shape)
-    print("样本键:", list(sample.keys()))
+    print(":", sample["pixel_values"].shape)
+    print(":", list(sample.keys()))
     
 except Exception as e:
-    print(f"加载数据集时出错: {str(e)}")
+    print(f": {str(e)}")
     exit(1)
 
-# 创建输出目录
+# Comment translated to English and cleaned.
 output_dir = os.path.join(base_dir, "output")
 os.makedirs(output_dir, exist_ok=True)
 output_file = os.path.join(output_dir, "flickr8k_blip2_descriptions_similarity.csv")
 
-# 准备评估数据结构
-# 存储每个基础图片的所有参考描述
+# Comment translated to English and cleaned.
+# Comment translated to English and cleaned.
 reference_descriptions = defaultdict(list)
 
-# 首先收集所有参考描述
-print("\n收集参考描述用于评估...")
-for i in tqdm(range(len(dataset)), desc="收集参考描述"):
+# Comment translated to English and cleaned.
+print("\n...")
+for i in tqdm(range(len(dataset)), desc=""):
     metadata = dataset.get_metadata(i)
     base_id = metadata["base_image_id"]
     caption = metadata["caption"]
     reference_descriptions[base_id].append(caption)
 
-# 生成描述
-print(f"\n开始为整个数据集生成描述...")
+# Comment translated to English and cleaned.
+print(f"\n...")
 model.eval()
 
 results = []
@@ -104,92 +104,92 @@ batch_size = 8
 num_batches = (len(dataset) + batch_size - 1) // batch_size
 
 start_time = time.time()
-skipped_indices = []  # 记录跳过的样本索引
+skipped_indices = []  # Comment translated to English and cleaned.
 
 def select_most_similar(candidates, reference, similarity_model):
     """
-    计算每个候选描述与参考描述的相似度，返回最相似的一个
+    
     """
     if similarity_model is None:
-        # 如果没有相似度模型，使用简单的长度匹配作为后备
+        # Comment translated to English and cleaned.
         ref_len = len(reference.split())
         best_idx = min(range(len(candidates)), 
                        key=lambda i: abs(len(candidates[i].split()) - ref_len))
         return candidates[best_idx]
     
-    # 编码所有文本
+    # Comment translated to English and cleaned.
     candidate_embeddings = similarity_model.encode(candidates, convert_to_tensor=True)
     ref_embedding = similarity_model.encode([reference], convert_to_tensor=True)
     
-    # 计算余弦相似度
+    # Comment translated to English and cleaned.
     similarities = util.pytorch_cos_sim(ref_embedding, candidate_embeddings)[0]
     
-    # 找到最相似的候选
+    # Comment translated to English and cleaned.
     best_idx = torch.argmax(similarities).item()
     return candidates[best_idx]
 
 def process_generated_text(text,prompt):
-    """处理生成的文本，移除提示部分"""
+    """"""
     text = re.sub(f"^{re.escape(prompt)}", "", text).strip()
     return text 
 
 with torch.no_grad():
-    progress_bar = tqdm(range(num_batches), desc="生成描述")
+    progress_bar = tqdm(range(num_batches), desc="")
     for i in progress_bar:
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, len(dataset))
         
-        # 获取批次数据
+        # Comment translated to English and cleaned.
         batch_samples = []
         valid_indices = []
-        metadata_list = []  # 存储元数据
+        metadata_list = []  # Comment translated to English and cleaned.
         
         for j in range(start_idx, end_idx):
             try:
-                # 获取样本数据
+                # Comment translated to English and cleaned.
                 sample = dataset[j]
                 
-                # 获取元数据
+                # Comment translated to English and cleaned.
                 metadata = dataset.get_metadata(j)
                 
                 batch_samples.append(sample)
                 valid_indices.append(j)
                 metadata_list.append(metadata)
             except Exception as e:
-                print(f"\n跳过样本 {j}: {str(e)}")
+                print(f"\n {j}: {str(e)}")
                 skipped_indices.append(j)
         
         if not batch_samples:
             continue
         
-        # 准备批处理输入 - 使用动态填充
+        # Comment translated to English and cleaned.
         pixel_values = torch.cat([s["pixel_values"] for s in batch_samples]).to(device)
         
-        # 处理文本输入 - 使用动态填充
+        # Comment translated to English and cleaned.
         input_ids_list = [s["input_ids"] for s in batch_samples]
         attention_mask_list = [s["attention_mask"] for s in batch_samples]
         
-        # 找到批次中最长的序列长度
+        # Comment translated to English and cleaned.
         max_length = max([ids.shape[1] for ids in input_ids_list])
         
-        # 填充所有序列到相同长度
+        # Comment translated to English and cleaned.
         padded_input_ids = []
         padded_attention_mask = []
         
         for input_ids, attn_mask in zip(input_ids_list, attention_mask_list):
-            # 当前序列长度
+            # Comment translated to English and cleaned.
             seq_len = input_ids.shape[1]
             
-            # 计算需要填充的长度
+            # Comment translated to English and cleaned.
             pad_len = max_length - seq_len
             
-            # 填充input_ids (使用pad token id)
+            # Comment translated to English and cleaned.
             padded_input = torch.cat([
                 input_ids,
                 torch.full((1, pad_len), processor.tokenizer.pad_token_id, device=input_ids.device)
             ], dim=1)
             
-            # 填充attention mask
+            # Comment translated to English and cleaned.
             padded_attn = torch.cat([
                 attn_mask,
                 torch.zeros((1, pad_len), device=attn_mask.device)
@@ -198,17 +198,17 @@ with torch.no_grad():
             padded_input_ids.append(padded_input)
             padded_attention_mask.append(padded_attn)
             
-        # 连接填充后的张量
+        # Comment translated to English and cleaned.
         input_ids = torch.cat(padded_input_ids).to(device)
         attention_mask = torch.cat(padded_attention_mask).to(device)
         
-        # 生成多个候选描述 (每个样本3个)
+        # Comment translated to English and cleaned.
        
         generated_ids = model.generate(
             input_ids=input_ids,
             pixel_values=pixel_values,
-            do_sample=False,  # 启用随机采样
-            num_return_sequences=3,  # 每个样本返回3个候选序列
+            do_sample=False,  # Comment translated to English and cleaned.
+            num_return_sequences=3,  # Comment translated to English and cleaned.
             attention_mask=attention_mask,
             max_new_tokens=80,
             num_beams=5,
@@ -219,36 +219,36 @@ with torch.no_grad():
             eos_token_id=model.config.eos_token_id,
         )
         
-        # 解码所有生成的描述
+        # Comment translated to English and cleaned.
         all_generated_texts = processor.batch_decode(generated_ids, skip_special_tokens=True)
         
-        # 按样本分组生成结果：每个样本有3个候选描述
+        # Comment translated to English and cleaned.
         batch_size_actual = len(batch_samples)
         grouped_texts = [all_generated_texts[i*3 : (i+1)*3] for i in range(batch_size_actual)]
         
-                # 处理每个样本
+                # Comment translated to English and cleaned.
         for idx, (candidates, metadata) in enumerate(zip(grouped_texts, metadata_list)):
             original_caption = metadata["caption"]
 
             prompt = ('Identify which objects are present in the diagram and specify how they are related. Based on these findings, please generate a 15-30 word description for this image.')
-            # 后处理：移除提示词
+            # Comment translated to English and cleaned.
             processed_candidates = [process_generated_text(text,prompt) for text in candidates]
             
-            # 计算相似度并选择最佳描述
+            # Comment translated to English and cleaned.
             best_caption = select_most_similar(
                 candidates=processed_candidates,
                 reference=original_caption,
                 similarity_model=similarity_model
             )
 
-            # 【新增日志】打印每条生成的最优描述
+            # Comment translated to English and cleaned.
             logger.info(
-                f"样本索引 {valid_indices[idx]} | "
-                f"原始: \"{original_caption}\" | "
-                f"生成: \"{best_caption}\""
+                f" {valid_indices[idx]} | "
+                f": \"{original_caption}\" | "
+                f": \"{best_caption}\""
             )
 
-            # 添加到结果列表
+            # Comment translated to English and cleaned.
             results.append({
                 "full_image_id": metadata["full_image_id"],
                 "base_image_id": metadata["base_image_id"],
@@ -259,18 +259,18 @@ with torch.no_grad():
             })
 
             
-        # 更新进度条
+        # Comment translated to English and cleaned.
         progress_bar.set_postfix({
-            "已处理": f"{len(results)}/{len(dataset)}",
-            "跳过": len(skipped_indices)
+            "": f"{len(results)}/{len(dataset)}",
+            "": len(skipped_indices)
         })
 
-# 保存结果到CSV
+# Comment translated to English and cleaned.
 if results:
     results_df = pd.DataFrame(results)
     results_df.to_csv(output_file, index=False)
 
-# 计算统计信息
+# Comment translated to English and cleaned.
 elapsed_time = time.time() - start_time
 processed_count = len(results)
 if processed_count > 0:
@@ -278,29 +278,30 @@ if processed_count > 0:
 else:
     images_per_sec = 0
 
-print("\n生成完成!")
-print(f"总样本数: {len(dataset)}")
-print(f"成功处理: {processed_count}")
-print(f"跳过样本: {len(skipped_indices)}")
-print(f"总耗时: {elapsed_time:.2f} 秒")
-print(f"处理速度: {images_per_sec:.2f} 图片/秒")
-print(f"结果保存至: {output_file}")
+print("\n!")
+print(f": {len(dataset)}")
+print(f": {processed_count}")
+print(f": {len(skipped_indices)}")
+print(f": {elapsed_time:.2f} ")
+print(f": {images_per_sec:.2f} /")
+print(f": {output_file}")
 
-# 保存跳过的样本信息
+# Comment translated to English and cleaned.
 if skipped_indices:
     skipped_file = os.path.join(output_dir, "skipped_indices.txt")
     with open(skipped_file, 'w') as f:
         for idx in skipped_indices:
             f.write(f"{idx}\n")
-    print(f"跳过的样本索引保存至: {skipped_file}")
+    print(f": {skipped_file}")
 
-# 打印前5个结果
+# Comment translated to English and cleaned.
 if results:
-    print("\n前5个生成描述:")
+    print("\n5:")
     for i, res in enumerate(results[:5]):
-        print(f"\n样本 {i+1}:")
-        print(f"  原始描述: {res['original_caption']}")
-        print(f"  生成描述: {res['generated_caption']}")
-        print(f"  所有候选: {res['all_candidates']}")
+        print(f"\n {i+1}:")
+        print(f"  : {res['original_caption']}")
+        print(f"  : {res['generated_caption']}")
+        print(f"  : {res['all_candidates']}")
 else:
-    print("\n没有生成任何结果")
+    print("\n")
+

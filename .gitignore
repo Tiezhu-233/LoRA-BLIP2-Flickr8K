@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.Trash-*/
+.idea/
+.vscode/
+
+# Runtime artifacts
+*.log
+logs/
+checkpoint/
+checkpoints/
+generated_captions.json
+generated_captions_*.json
+inference_errors.json
+
+# Data outputs and temporary results
+output/
+outputs/
+tmp/
+temp/
+data/
+dataset/
+datasets/
+downloads/
+
+# Flickr8k common local paths and archives
+Flickr8k_Dataset/
+Flickr8k_text/
+Flickr8k.token.txt
+Flickr_8k.trainImages.txt
+Flickr_8k.devImages.txt
+Flickr_8k.testImages.txt
+captions.txt
+annotations.txt
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Large model artifacts
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Local smoke-test checkpoints
+checkpoint_smoke/

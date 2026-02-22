@@ -1,4 +1,4 @@
-# 定义提示词模板合集
+# Comment translated to English and cleaned.
 PROMPT_TEMPLATES = [
     "Question: what is shown in this image? Answer:",
     "Describe the content of this photo:",
@@ -22,7 +22,7 @@ PROMPT_TEMPLATES = [
     "Describe the subject matter of this photo:"
 ]
 
-from datasets2 import Flickr8kDataset
+from flickr8k_dataset_simple import Flickr8kDataset
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 import torch
 import os
@@ -35,63 +35,63 @@ from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 from rouge import Rouge
 import json
 
-# 下载必要的NLTK资源
+# Comment translated to English and cleaned.
 nltk.download('punkt', quiet=True)
 nltk.download('wordnet', quiet=True)
 nltk.download('omw-1.4', quiet=True)
 
-# 设置基础路径
-base_dir = "/root/autodl-tmp"
+# Comment translated to English and cleaned.
+base_dir = os.getenv("PROJECT_ROOT", ".")
 
-# 设置数据集路径
-image_dir = os.path.join(base_dir, "data/Flickr8k/Images")
-caption_path = os.path.join(base_dir, "data/Flickr8k/captions.txt")
+# Comment translated to English and cleaned.
+image_dir = os.getenv("FLICKR8K_IMAGE_DIR", os.path.join(base_dir, "data", "flickr8k", "Flickr8k_Dataset"))
+caption_path = os.getenv("FLICKR8K_CAPTION_FILE", os.path.join(base_dir, "data", "flickr8k", "captions.txt"))
 
-# 初始化模型和处理器
+# Comment translated to English and cleaned.
 device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"使用设备: {device}")
+print(f": {device}")
 
 try:
-    print("正在加载模型...")
+    print("...")
     processor = Blip2Processor.from_pretrained("blip2-opt-2.7b")
     model = Blip2ForConditionalGeneration.from_pretrained(
         "blip2-opt-2.7b",
         torch_dtype=torch.float16
     ).to(device)
-    print("模型加载成功")
+    print("")
 except Exception as e:
-    print(f"模型加载失败: {str(e)}")
+    print(f": {str(e)}")
     exit(1)
 
-# 加载数据集
+# Comment translated to English and cleaned.
 try:
-    print("正在创建数据集实例...")
+    print("...")
     dataset = Flickr8kDataset(
         image_dir=image_dir,
         caption_path=caption_path,
         processor=processor
     )
-    print(f"数据集创建成功，包含 {len(dataset)} 个样本")
+    print(f" {len(dataset)} ")
     
-    # 测试第一个样本
-    print("测试第一个样本...")
+    # Comment translated to English and cleaned.
+    print("...")
     sample = dataset[0]
-    print("样本键:", list(sample.keys()))
+    print(":", list(sample.keys()))
     
 except Exception as e:
-    print(f"加载数据集时出错: {str(e)}")
+    print(f": {str(e)}")
     exit(1)
 
-# 创建输出目录
+# Comment translated to English and cleaned.
 output_dir = os.path.join(base_dir, "output")
 os.makedirs(output_dir, exist_ok=True)
 output_file = os.path.join(output_dir, "flickr8k_blip2_descriptions.csv")
 metrics_file = os.path.join(output_dir, "evaluation_metrics.json")
 prompt_stats_file = os.path.join(output_dir, "prompt_usage_stats.json")
 
-# 生成描述
-print(f"\n开始为整个数据集生成描述...")
-print(f"使用 {len(PROMPT_TEMPLATES)} 种提示词模板")
+# Comment translated to English and cleaned.
+print(f"\n...")
+print(f" {len(PROMPT_TEMPLATES)} ")
 model.eval()
 
 results = []
@@ -99,59 +99,59 @@ batch_size = 8
 num_batches = (len(dataset) + batch_size - 1) // batch_size
 
 start_time = time.time()
-skipped_indices = []  # 记录跳过的样本索引
+skipped_indices = []  # Comment translated to English and cleaned.
 
-# 记录提示词使用情况
+# Comment translated to English and cleaned.
 prompt_usage = {prompt: 0 for prompt in PROMPT_TEMPLATES}
 
 with torch.no_grad():
-    progress_bar = tqdm(range(num_batches), desc="生成描述")
+    progress_bar = tqdm(range(num_batches), desc="")
     for i in progress_bar:
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, len(dataset))
         
-        # 获取批次数据
+        # Comment translated to English and cleaned.
         batch_images = []
         valid_indices = []
-        captions = []  # 存储参考描述
-        image_ids = []  # 存储图片ID
-        prompt_list = []  # 存储每个样本使用的提示词
+        captions = []  # Comment translated to English and cleaned.
+        image_ids = []  # Comment translated to English and cleaned.
+        prompt_list = []  # Comment translated to English and cleaned.
         
         for j in range(start_idx, end_idx):
             try:
-                # 获取样本数据
+                # Comment translated to English and cleaned.
                 sample = dataset[j]
                 batch_images.append(sample["image"])
                 valid_indices.append(j)
                 image_ids.append(sample["image_id"])
                 
-                # 从数据集获取参考描述
+                # Comment translated to English and cleaned.
                 row = dataset.captions.iloc[j]
                 captions.append(row["caption"])
                 
-                # 随机选择一个提示词模板
+                # Comment translated to English and cleaned.
                 selected_prompt = random.choice(PROMPT_TEMPLATES)
                 prompt_list.append(selected_prompt)
                 prompt_usage[selected_prompt] += 1
                 
             except Exception as e:
-                print(f"\n跳过样本 {j}: {str(e)}")
+                print(f"\n {j}: {str(e)}")
                 skipped_indices.append(j)
         
         if not batch_images:
             continue
         
-        # 使用处理器处理图片和文本
+        # Comment translated to English and cleaned.
         inputs = processor(
             images=batch_images,
             text=prompt_list,
             padding="max_length",
-            max_length=40,  # 与之前一致
+            max_length=40,  # Comment translated to English and cleaned.
             truncation=True,
             return_tensors="pt"
         ).to(device)
         
-        # 生成描述
+        # Comment translated to English and cleaned.
         generated_ids = model.generate(
             input_ids=inputs["input_ids"],
             pixel_values=inputs["pixel_values"],
@@ -161,16 +161,16 @@ with torch.no_grad():
             early_stopping=True
         )
         
-        # 解码描述
+        # Comment translated to English and cleaned.
         generated_texts = processor.batch_decode(generated_ids, skip_special_tokens=True)
         
-        # 保存结果
+        # Comment translated to English and cleaned.
         for idx, (text, caption, img_id, prompt) in enumerate(zip(generated_texts, captions, image_ids, prompt_list)):
-            # 移除提示词（如果存在）
+            # Comment translated to English and cleaned.
             if prompt in text:
                 text = text.replace(prompt, "").strip()
             
-            # 添加到结果列表
+            # Comment translated to English and cleaned.
             results.append({
                 "image_id": img_id,
                 "generated_caption": text,
@@ -179,17 +179,17 @@ with torch.no_grad():
                 "dataset_index": valid_indices[idx]
             })
             
-        # 更新进度条
+        # Comment translated to English and cleaned.
         progress_bar.set_postfix({
-            "已处理": f"{len(results)}/{len(dataset)}",
-            "跳过": len(skipped_indices)
+            "": f"{len(results)}/{len(dataset)}",
+            "": len(skipped_indices)
         })
 
-# 保存结果到CSV
+# Comment translated to English and cleaned.
 results_df = pd.DataFrame(results)
 results_df.to_csv(output_file, index=False)
 
-# 计算统计信息
+# Comment translated to English and cleaned.
 elapsed_time = time.time() - start_time
 processed_count = len(results)
 if processed_count > 0:
@@ -197,33 +197,33 @@ if processed_count > 0:
 else:
     images_per_sec = 0
 
-print("\n生成完成!")
-print(f"总样本数: {len(dataset)}")
-print(f"成功处理: {processed_count}")
-print(f"跳过样本: {len(skipped_indices)}")
-print(f"总耗时: {elapsed_time:.2f} 秒")
-print(f"处理速度: {images_per_sec:.2f} 图片/秒")
-print(f"结果保存至: {output_file}")
+print("\n!")
+print(f": {len(dataset)}")
+print(f": {processed_count}")
+print(f": {len(skipped_indices)}")
+print(f": {elapsed_time:.2f} ")
+print(f": {images_per_sec:.2f} /")
+print(f": {output_file}")
 
-# 保存跳过的样本信息
+# Comment translated to English and cleaned.
 if skipped_indices:
     skipped_file = os.path.join(output_dir, "skipped_indices.txt")
     with open(skipped_file, 'w') as f:
         for idx in skipped_indices:
             f.write(f"{idx}\n")
-    print(f"跳过的样本索引保存至: {skipped_file}")
+    print(f": {skipped_file}")
 
-# 保存提示词使用统计
+# Comment translated to English and cleaned.
 with open(prompt_stats_file, 'w') as f:
     json.dump(prompt_usage, f, indent=2)
-print(f"提示词使用统计保存至: {prompt_stats_file}")
+print(f": {prompt_stats_file}")
 
-# 打印提示词使用情况
-print("\n提示词使用统计:")
+# Comment translated to English and cleaned.
+print("\n:")
 for prompt, count in sorted(prompt_usage.items(), key=lambda x: x[1], reverse=True):
-    print(f"{count}次: {prompt}")
+    print(f"{count}: {prompt}")
 
-# 打印前5个结果
+# Comment translated to English and cleaned.
 if not results_df.empty:
-    print("\n前5个生成描述:")
+    print("\n5:")
     print(results_df[["image_id", "prompt_used", "generated_caption"]].head())

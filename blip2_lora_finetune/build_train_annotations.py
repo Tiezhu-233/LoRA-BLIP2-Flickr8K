@@ -2,10 +2,13 @@ import os
 from collections import defaultdict
 import json
 
-base_dir = "/root/autodl-tmp/data/Flickr8k/captions.txt"
+base_dir = os.getenv("FLICKR8K_TEXT_DIR", os.path.join("data", "flickr8k"))
 token_path = os.path.join(base_dir, "Flickr8k.token.txt")
 train_list_path = os.path.join(base_dir, "Flickr_8k.trainImages.txt")
-output_path = os.path.join("/root/autodl-tmp/blip2_lora_finetune", "flickr8k_train.json")
+output_path = os.getenv(
+    "FLICKR8K_TRAIN_JSON",
+    os.path.join("blip2_lora_finetune", "flickr8k_train.json")
+)
 
 with open(train_list_path, "r") as f:
     train_images = set(line.strip() for line in f.readlines())
@@ -23,7 +26,10 @@ for image_name, captions in image_captions.items():
     if captions:
         train_data.append({"image": image_name, "caption": captions[0]})
 
+output_dir = os.path.dirname(output_path)
+if output_dir:
+    os.makedirs(output_dir, exist_ok=True)
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump(train_data, f, indent=2)
 
-print(f"✅ Saved {len(train_data)} samples to {output_path}")
+print(f"Saved {len(train_data)} samples to {output_path}")

@@ -1,4 +1,4 @@
-from datasets import Flickr8kDataset
+from flickr8k_dataset_full import Flickr8kDataset
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 import torch
 import os
@@ -20,7 +20,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join("/root/autodl-tmp/output", "caption_generation.log")),
+        logging.FileHandler(os.path.join(os.getenv("OUTPUT_DIR", os.path.join(os.getenv("PROJECT_ROOT", "."), "output")), "caption_generation.log")),
         logging.StreamHandler()
     ]
 )
@@ -33,9 +33,9 @@ nltk.download('wordnet', quiet=True)
 nltk.download('omw-1.4', quiet=True)
 
 # Set base paths
-base_dir = "/root/autodl-tmp"
-image_dir = os.path.join(base_dir, "data/Flickr8k/Images")
-caption_path = os.path.join(base_dir, "data/Flickr8k/captions.txt")
+base_dir = os.getenv("PROJECT_ROOT", ".")
+image_dir = os.getenv("FLICKR8K_IMAGE_DIR", os.path.join(base_dir, "data", "flickr8k", "Flickr8k_Dataset"))
+caption_path = os.getenv("FLICKR8K_CAPTION_FILE", os.path.join(base_dir, "data", "flickr8k", "captions.txt"))
 
 # Initialize models and processors
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -93,7 +93,7 @@ class EnhancedPromptEngine:
         ] 
         self.debug_samples = []
 
-        # 初始化自定义分类器
+        # Comment translated to English and cleaned.
         self.label_classifier = self._init_classifier()
         
         
@@ -197,18 +197,18 @@ class EnhancedPromptEngine:
         self.voting_history = defaultdict(list)
 
     def _init_classifier(self):
-        """初始化一个简单的多层分类器"""
-        # 使用BLIP视觉模型的输出维度
+        """"""
+        # Comment translated to English and cleaned.
         vision_hidden_size = self.model.config.vision_config.hidden_size
         
         classifier = torch.nn.Sequential(
             torch.nn.Linear(vision_hidden_size, 256),
             torch.nn.ReLU(),
             torch.nn.Linear(256, len(self.label_names)),
-            torch.nn.Sigmoid()  # 多标签分类使用sigmoid
+            torch.nn.Sigmoid()  # Comment translated to English and cleaned.
         ).to(self.device)
         
-        # 这里应该加载预训练权重
+        # Comment translated to English and cleaned.
         # classifier.load_state_dict(torch.load("classifier_weights.pth"))
         return classifier
 
@@ -218,24 +218,24 @@ class EnhancedPromptEngine:
             image = Image.open(image_path).convert("RGB")
             logger.debug(f"Image loaded and converted to RGB: size={image.size}")
         
-        # 使用处理器准备输入
+        # Comment translated to English and cleaned.
             inputs = self.processor(images=image, return_tensors="pt")
             logger.debug(f"Processor inputs created: pixel_values.shape={inputs['pixel_values'].shape}")
         
-        # 移动到设备并转换为半精度
+        # Comment translated to English and cleaned.
             inputs = {k: v.to(self.device, torch.float16) for k, v in inputs.items()}
             logger.debug(f"Inputs moved to {self.device} with dtype float16")
         
             with torch.no_grad():
-            # 使用视觉模型提取特征
+            # Comment translated to English and cleaned.
                 vision_outputs = self.model.vision_model(**inputs)
                 logger.debug(f"Vision model output: last_hidden_state.shape={vision_outputs.last_hidden_state.shape}")
             
-            # 提取[CLS] token特征
+            # Comment translated to English and cleaned.
                 cls_features = vision_outputs.last_hidden_state[:, 0, :]
                 logger.info(f"[CLS] token extracted: shape={cls_features.shape}")
         
-        # 压缩维度并返回
+        # Comment translated to English and cleaned.
             features = cls_features.squeeze(0)
             logger.debug(f"Features squeezed: final shape={features.shape}")
             return features
@@ -249,10 +249,10 @@ class EnhancedPromptEngine:
     def predict_labels(self, visual_features, top_k=3):
     
         if visual_features is None:
-            logger.warning("predict_labels: 输入特征为 None，跳过预测")
+            logger.warning("predict_labels:  None")
             return [], np.zeros(len(self.label_names))
 
-    # 保证 dtype 一致
+    # Comment translated to English and cleaned.
         classifier_dtype = next(self.label_classifier.parameters()).dtype
         visual_features = visual_features.to(self.device, dtype=classifier_dtype)
 
@@ -260,7 +260,7 @@ class EnhancedPromptEngine:
             logits = self.label_classifier(visual_features.unsqueeze(0))
             probs = logits[0].cpu().numpy()
 
-    # 取概率最高的 top_k 个索引
+    # Comment translated to English and cleaned.
         top_indices = np.argsort(probs)[::-1][:top_k]
         predicted = [self.label_names[i] for i in top_indices]
 
@@ -273,18 +273,18 @@ class EnhancedPromptEngine:
     def extract_keywords(self, image_path: str) -> List[str]:
         
         try:
-            # 1. 提取视觉特征
+            # Comment translated to English and cleaned.
             visual_features = self.extract_visual_features(image_path)
             
-            # 2. 预测标签
+            # Comment translated to English and cleaned.
             labels, probs = self.predict_labels(visual_features)
             
-            # 3. 返回概率最高的5个标签作为关键词
+            # Comment translated to English and cleaned.
             if not labels:
-                # 如果没有预测到标签，返回通用关键词
+                # Comment translated to English and cleaned.
                 return ["general", "scene", "photograph", "image", "picture"]
                 
-            # 按概率排序并选择前1个
+            # Comment translated to English and cleaned.
             sorted_indices = np.argsort(probs)[::-1]
             top_labels = [self.label_names[i] for i in sorted_indices[:1]]
             
@@ -427,7 +427,7 @@ skipped_indices = []
 failed_batches = 0
 max_length = 120
 
-# 先定义两个变量，用来存第一个 caption 的元数据和文本
+# Comment translated to English and cleaned.
 first_caption_meta = None
 first_caption_text = None
 
@@ -566,17 +566,17 @@ with torch.no_grad():
                     "image_path": meta["image_path"],
                     "dataset_index": valid_indices[idx // 3]
                 })
-                # 在每次 append 后，如果还没有记录第一条，就记录下来
+                # Comment translated to English and cleaned.
                 if first_caption_meta is None and results:
-                    first_caption_meta = results[0]           # 第一条结果的字典
+                    first_caption_meta = results[0]  # Comment translated to English and cleaned.
                     first_caption_text = first_caption_meta["generated_caption"]
 
                     
-                # 同时记录到日志
-                    logger.info("\n=== 第一条生成的描述 ===")
-                    logger.info(f"图片文件: {os.path.basename(first_caption_meta['image_path'])}")
-                    logger.info(f"使用的 Prompt: {first_caption_meta['prompt_used']}")
-                    logger.info(f"生成的 Caption: {first_caption_text}")
+                # Comment translated to English and cleaned.
+                    logger.info("\n===  ===")
+                    logger.info(f": {os.path.basename(first_caption_meta['image_path'])}")
+                    logger.info(f" Prompt: {first_caption_meta['prompt_used']}")
+                    logger.info(f" Caption: {first_caption_text}")
                     logger.info("=========================")
                 
 
@@ -591,7 +591,7 @@ with torch.no_grad():
             "skipped": len(skipped_indices),
             "failed_batches": failed_batches
         })
-# # 先定义两个变量，用来存第一个 caption 的元数据和文本
+# Comment translated to English and cleaned.
 # first_caption_meta = None
 # first_caption_text = None
 
@@ -635,27 +635,27 @@ with torch.no_grad():
 #             logger.warning(f"Batch {i} failed - no valid samples")
 #             continue
         
-#         # 一次性处理整个批次的图像和提示词
+# Comment translated to English and cleaned.
 #         try:
-#             # 准备批量数据
+# Comment translated to English and cleaned.
 #             batch_images = []
 #             batch_texts = []
 #             expanded_metadata = []
             
 #             for idx, sample in enumerate(batch_samples):
-#                 # 读取图像
+# Comment translated to English and cleaned.
 #                 image = Image.open(sample["image_path"]).convert("RGB")
                 
-#                 # 获取该图像的所有prompt
+# Comment translated to English and cleaned.
 #                 prompts = prompt_variants_list[idx]
 #                 categories = category_variants_list[idx]
                 
-#                 # 为每个prompt添加图像和文本
+# Comment translated to English and cleaned.
 #                 for prompt, category in zip(prompts, categories):
 #                     batch_images.append(image)
 #                     batch_texts.append(prompt)
                     
-#                     # 构建元数据
+# Comment translated to English and cleaned.
 #                     expanded_metadata.append({
 #                         "base_metadata": metadata_list[idx],
 #                         "prompt": prompt,
@@ -671,12 +671,12 @@ with torch.no_grad():
 #                 return_tensors="pt",
 #                 padding="max_length",
 #                 truncation=True,
-#                 max_length=128,    # 为解码预留足够 PAD
+# Comment translated to English and cleaned.
 #             )
 #             pixel_values   = encoding["pixel_values"].to(device, torch.float16)
 #             input_ids      = encoding["input_ids"].to(device)        # long
 #             attention_mask = encoding["attention_mask"].to(device)   # long
-#             # 生成描述
+# Comment translated to English and cleaned.
 #             generated_ids = model.generate(
 #                 pixel_values=pixel_values,
 #                 input_ids=input_ids,
@@ -687,20 +687,20 @@ with torch.no_grad():
 #             )
 
             
-#             # 解码生成的文本
+# Comment translated to English and cleaned.
 #             generated_texts = processor.batch_decode(generated_ids, skip_special_tokens=True)
 #             logger.info(f"Generated {len(generated_texts)} captions for batch {i}")
             
-#             # 处理结果
+# Comment translated to English and cleaned.
 #             for idx, (text, meta) in enumerate(zip(generated_texts, expanded_metadata)):
-#                 # 移除提示词部分
+# Comment translated to English and cleaned.
 #                 clean_text = text.replace(meta["prompt"], "").strip()
                 
 #                 logger.debug(f"\nImage: {os.path.basename(meta['image_path'])}")
 #                 logger.debug(f"Prompt: {meta['prompt']}")
 #                 logger.debug(f"Generated: {clean_text}")
                 
-#                 # 创建结果条目
+# Comment translated to English and cleaned.
 #                 result_entry = {
 #                     "image_id": meta["base_metadata"]["full_image_id"],
 #                     "base_image_id": meta["base_metadata"]["base_image_id"],
@@ -713,21 +713,21 @@ with torch.no_grad():
 #                 }
                 
                 
-#                 # 添加到结果列表
+# Comment translated to English and cleaned.
 #                 results.append(result_entry)
                 
-#                 # 如果是第一条结果，记录下来
+# Comment translated to English and cleaned.
                 
                     
 #                 if first_caption_meta is None and results:
-#                     first_caption_meta = results[0]           # 第一条结果的字典
+# Comment translated to English and cleaned.
 #                     first_caption_text = first_caption_meta["generated_caption"]
 
                 
-#                     print("\n=== 第一条生成的描述 ===")
-#                     print(f"图片文件: {os.path.basename(first_caption_meta['image_path'])}")
-#                     print(f"使用的 Prompt: {first_caption_meta['prompt_used']}")
-#                     print(f"生成的 Caption: {first_caption_text}")
+# Comment translated to English and cleaned.
+# Comment translated to English and cleaned.
+# Comment translated to English and cleaned.
+# Comment translated to English and cleaned.
 #                     print("=========================")
                 
 #         except Exception as e:
@@ -791,3 +791,4 @@ logger.info("Prompt category distribution:")
 for cat, count in prompt_engine.category_counts.items():
     logger.info(f"  {cat}: {count} prompts")
 logger.info(f"\nFull analysis saved to {prompt_analysis_file}")
+

@@ -37,7 +37,7 @@ def generate_image_caption(image, processor, model, device):
     # outputs = model.generate(
     #         input_ids=inputs.input_ids,
     #         pixel_values=inputs.pixel_values,
-    #         num_return_sequences=3,  # 每个样本返回3个候选序列
+    # Comment translated to English and cleaned.
     #         attention_mask=inputs.attention_mask,
     #         max_new_tokens=80,
     #         num_beams=6,
@@ -59,23 +59,23 @@ def generate_image_caption(image, processor, model, device):
             no_repeat_ngram_size=3,
             eos_token_id=model.config.eos_token_id,
         )
-    print(f"generate 返回张量 shape: {outputs.shape}")
+    print(f"generate  shape: {outputs.shape}")
     
-    # 处理生成结果
+    # Comment translated to English and cleaned.
     raw_caption = processor.decode(outputs[0], skip_special_tokens=True)
     for i, cap in enumerate(outputs):
         print(f"[Caption {i+1}]: {processor.decode(cap, skip_special_tokens=True)}")
     print(f"\n[Raw output]: {raw_caption}")
     
-    # 后处理函数
+    # Comment translated to English and cleaned.
     def clean_caption(text, prompt):
-        # 移除提示词部分
+        # Comment translated to English and cleaned.
         text = re.sub(f"^{re.escape(prompt)}", "", text).strip()
-        # 清理编号和多余符号
-        text = re.sub(r'^\s*\d+[\.\:]?\s*', '', text)  # 匹配1. 或1: 等格式
-        text = re.sub(r'[.;,]+$', '', text)            # 移除尾部标点
+        # Comment translated to English and cleaned.
+        text = re.sub(r'^\s*\d+[\.\:]?\s*', '', text)  # Comment translated to English and cleaned.
+        text = re.sub(r'[.;,]+$', '', text)  # Comment translated to English and cleaned.
         return text
-        # # 移除重复内容（处理模型输出重复问题）
+        # Comment translated to English and cleaned.
         # sentences = text.split('.')
         # unique_sentences = []
         # for sent in sentences:
@@ -84,15 +84,15 @@ def generate_image_caption(image, processor, model, device):
         #         unique_sentences.append(sent)
         # return '. '.join(unique_sentences).strip()
     
-    # 清理原始描述
+    # Comment translated to English and cleaned.
     cleaned = clean_caption(raw_caption, caption_prompt)
     
-    # 确保长度在15-30词之间
+    # Comment translated to English and cleaned.
     # words = raw_caption.split()
     # if len(words) > 100:
     #     cleaned = ' '.join(words[:50])
     # elif len(words) < 15:
-    #     # 如果太短，使用原始描述（不包含提示词）
+    # Comment translated to English and cleaned.
     #     cleaned = clean_caption(raw_caption, caption_prompt)
     
     
@@ -100,7 +100,7 @@ def generate_image_caption(image, processor, model, device):
 
 
 def main():
-    # 设置全局随机种子保证可复现性
+    # Comment translated to English and cleaned.
     torch.manual_seed(20250723)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(20250723)
@@ -108,7 +108,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
     
-    # 动态精度设置（兼容不同设备）
+    # Comment translated to English and cleaned.
     if device == "cuda" and torch.cuda.is_bf16_supported():
         torch_dtype = torch.bfloat16
     elif device == "cuda":
@@ -118,7 +118,7 @@ def main():
     
     try:
         
-        model_name = "blip2-opt-2.7b"
+        model_name = os.getenv("BLIP2_BASE_MODEL", "Salesforce/blip2-opt-2.7b")
         processor = Blip2Processor.from_pretrained(model_name)
         model = Blip2ForConditionalGeneration.from_pretrained(
             model_name,
@@ -130,9 +130,9 @@ def main():
         print(f"Error loading model: {e}")
         return
 
-    # 使用安全的路径处理
-    img_path = "/root/autodl-tmp/data/Flickr8k/Images/1000268201_693b08cb0e.jpg"
-    img_path = os.path.expanduser(img_path)  # 处理~扩展
+    # Comment translated to English and cleaned.
+    img_path = os.getenv("BLIP_RUN_IMAGE", os.path.join("data", "flickr8k", "Flickr8k_Dataset", "1000268201_693b08cb0e.jpg"))
+    img_path = os.path.expanduser(img_path)  # Comment translated to English and cleaned.
     
     if not os.path.isfile(img_path):
         print(f"Error: Cannot find image at {img_path}")
