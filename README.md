@@ -143,6 +143,28 @@ python blip2_lora_finetune/run_inference.py
 python src/flickr8k_evaluate.py
 ```
 
+
+## Optimization Techniques
+Current acceleration/efficiency techniques used in this project:
+
+- Optional 8-bit model loading (`LOAD_IN_8BIT=1`) for lower memory usage.
+- Automatic device placement via `device_map="auto"`.
+- Mixed precision training (`fp16`) on CUDA.
+- Mixed precision inference with `torch.amp.autocast` on CUDA.
+- LoRA adapter merge during inference (`merge_and_unload`) to reduce runtime overhead.
+
+Configuration knobs:
+- `LOAD_IN_8BIT`
+- `TRAIN_FP16`
+- `BLIP2_BASE_MODEL`
+- `LORA_CHECKPOINT`
+
+Not currently included:
+- 4-bit inference/QLoRA runtime path
+- `torch.compile`
+- FlashAttention/xFormers
+- ONNX/TensorRT export and deployment
+
 ## Runtime Configuration
 Common environment variables:
 - `BLIP2_BASE_MODEL` (default: `Salesforce/blip2-opt-2.7b`)
